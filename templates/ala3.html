@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALA - 3 MAC Authentication</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+</head>
+<body>
+
+<div class="premium-container extracted-inline-100">
+    
+    <!-- Header -->
+    <div class="university-header">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo">
+        <div class="header-text">
+            <h1>Gyanmanjari Institute of Technology</h1>
+            <p>Department of Information Technology</p>
+        </div>
+    </div>
+
+    <!-- Educational Section -->
+    <div class="section-card extracted-inline-101">
+        <h3 class="extracted-inline-102">📚 Educational Concepts: MAC vs Signature</h3>
+        
+        <div class="extracted-inline-103">
+            <div>
+                <p class="extracted-inline-104"><strong>What is MAC / HMAC?</strong></p>
+                <p class="extracted-inline-105">Message Authentication Code (MAC) guarantees that a message came from the stated sender (authenticity) and wasn't changed (integrity) via a <strong>shared secret key</strong>.</p>
+            </div>
+            <div>
+                <p class="extracted-inline-104"><strong>Difference: Dig-Sig vs MAC</strong></p>
+                <p class="extracted-inline-105">Digital Signatures (ALA-1) use <strong>Asymmetric</strong> keys (Public/Private pair) for non-repudiation. MAC uses <strong>Symmetric</strong> cryptography (Shared Secret) meaning the sender and receiver possess the exact same key.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="extracted-inline-106">
+        
+        <!-- SENDER SIDE -->
+        <div class="section-card extracted-inline-107">
+            <div class="section-header">
+                <div class="step-number extracted-inline-108">1</div>
+                <div class="section-title">
+                    <h3 class="extracted-inline-109">Sender Node</h3>
+                </div>
+            </div>
+            
+            <form id="senderForm">
+                <div class="input-group">
+                    <label class="extracted-inline-110" for="origMsg">Original Message</label>
+                    <input type="text" id="origMsg" class="input-box" placeholder="e.g. Transfer $1000" value="Hello Dipak">
+                </div>
+
+                <div class="input-group">
+                    <label class="extracted-inline-110" for="senderKey">Shared Secret Key</label>
+                    <input type="text" id="senderKey" class="input-box extracted-inline-111" value="secret123">
+                </div>
+                
+                <button type="button" class="btn extracted-inline-112" id="btnSender" onclick="generateMAC()">
+                    <svg class="extracted-inline-113" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    Generate MAC Signature
+                </button>
+            </form>
+
+            <div id="senderOutput" class="hidden extracted-inline-114">
+                <div class="extracted-inline-115">
+                    <span class="extracted-inline-116">Generated HMAC (SHA-256)</span>
+                    <div class="extracted-inline-117" id="out_mac"></div>
+                </div>
+                
+                <div class="extracted-inline-118">
+                    <div>Key: <strong class="extracted-inline-119" id="out_key_len"></strong> bits</div>
+                    <div>MAC: <strong class="extracted-inline-119" id="out_mac_len"></strong> bits</div>
+                    <div>Time: <strong class="extracted-inline-119" id="out_exec_time"></strong> ms</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ARROW OVERLAY -->
+        <div class="extracted-inline-120">
+            <div class="extracted-inline-121">SECURE CHANNEL</div>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="flow-arrow extracted-inline-122">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+            </svg>
+            <div class="extracted-inline-123">Message + MAC</div>
+        </div>
+
+        <!-- RECEIVER SIDE -->
+        <div class="section-card hidden extracted-inline-124" id="receiverBlock">
+            <div class="section-header">
+                <div class="step-number extracted-inline-125">2</div>
+                <div class="section-title">
+                    <h3 class="extracted-inline-126">Receiver Node</h3>
+                </div>
+            </div>
+            
+            <form id="receiverForm">
+                <div class="input-group">
+                    <label class="extracted-inline-126" for="recvMsg">Received Message <span class="extracted-inline-127">(Simulate Tampering)</span></label>
+                    <input type="text" id="recvMsg" class="input-box extracted-inline-128">
+                </div>
+
+                <div class="input-group hidden"> <!-- Hidden but bound for submission if needed, we'll read direct -->
+                    <label for="recvKey">Shared Secret Key</label>
+                    <input type="text" id="recvKey" class="input-box" value="secret123" readonly>
+                </div>
+                
+                <div class="input-group">
+                    <label class="extracted-inline-126" for="recvMac">Received MAC Signature</label>
+                    <input type="text" id="recvMac" class="input-box extracted-inline-129" readonly>
+                </div>
+                
+                <button type="button" class="btn extracted-inline-130" id="btnReceiver" onclick="verifyMAC()">
+                    <svg class="extracted-inline-113" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                    Recompute & Verify MAC
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- VERIFICATION RESULT SECTION -->
+    <div class="section-card hidden verif-section" id="verificationSection">
+        <div id="resultBanner" class="result-banner">
+            <!-- Dynamically injected -->
+        </div>
+
+        <div class="result-card-inner">
+            <h3 class="verif-title">Integrity Analysis Result</h3>
+            
+            <span class="verif-label">Original MAC (Received)</span>
+            <div id="orig_mac_display" class="mac-display"></div>
+            
+            <span class="verif-label">Recomputed MAC (Calculated)</span>
+            <div id="recomputed_mac_display" class="mac-display"></div>
+
+            <div class="verif-status-box">
+                <span class="verif-label">Status</span>
+                <div id="statusIndicator" class="verif-status-text">
+                    <!-- Dynamically injected -->
+                </div>
+            </div>
+        </div>
+
+        <div class="tech-details">
+            <div class="tech-stat">
+                <span>Algorithm</span>
+                <strong>HMAC-SHA256</strong>
+            </div>
+            <div class="tech-stat">
+                <span>MAC Length</span>
+                <strong id="stat_mac_len"></strong>
+            </div>
+            <div class="tech-stat">
+                <span>Key Length</span>
+                <strong id="stat_key_len"></strong>
+            </div>
+            <div class="tech-stat">
+                <span>Verify Time</span>
+                <strong id="stat_exec_time"></strong>
+            </div>
+        </div>
+
+        <div class="flow-explanation">
+            <strong>How this works:</strong><br>
+            Receiver recomputed the MAC using the shared secret key.
+            If the recomputed MAC identically matches the received MAC,
+            message integrity is preserved and no tampering occurred.
+        </div>
+    </div>
+
+    <!-- Footer / Navigation -->
+    <div class="extracted-inline-146">
+        <a href="/" class="nav-back">
+            <svg class="extracted-inline-147" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Return to Dashboard
+        </a>
+    </div>
+
+</div>
+
+<script>
+    async function generateMAC() {
+        const message = document.getElementById('origMsg').value;
+        const secretKey = document.getElementById('senderKey').value;
+
+        if (!message || !secretKey) {
+            alert("Sender requires a message and shared secret key.");
+            return;
+        }
+
+        const btn = document.getElementById('btnSender');
+        btn.disabled = true;
+        btn.innerHTML = `Generating...`;
+
+        try {
+            const formData = new FormData();
+            formData.append('message', message);
+            formData.append('key', secretKey);
+
+            const response = await fetch('/generate_mac', { method: 'POST', body: formData });
+            const data = await response.json();
+
+            // Populate Sender internal outputs
+            document.getElementById('out_mac').innerText = data.mac;
+            document.getElementById('out_key_len').innerText = data.key_length;
+            document.getElementById('out_mac_len').innerText = data.mac_length;
+            document.getElementById('out_exec_time').innerText = data.execution_time_ms;
+            document.getElementById('senderOutput').classList.remove('hidden');
+
+            // Pass payload over the "Secure Channel" to Receiver node
+            document.getElementById('recvMsg').value = data.message;
+            document.getElementById('recvKey').value = secretKey; // implicitly shared
+            document.getElementById('recvMac').value = data.mac;
+            
+            document.getElementById('receiverBlock').classList.remove('hidden');
+
+            // Hide verification until receiver clicks
+            document.getElementById('verificationSection').classList.add('hidden');
+
+        } catch (e) {
+            alert("Error computing MAC.");
+            console.error(e);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<svg class="extracted-inline-113" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> Generate MAC Signature`;
+        }
+    }
+
+    async function verifyMAC() {
+        const recvMsg = document.getElementById('recvMsg').value;
+        const secretKey = document.getElementById('recvKey').value;
+        const receivedMac = document.getElementById('recvMac').value;
+
+        const btn = document.getElementById('btnReceiver');
+        btn.disabled = true;
+        btn.innerHTML = `Verifying...`;
+
+        try {
+            const formData = new FormData();
+            formData.append('message', recvMsg);
+            formData.append('key', secretKey);
+            formData.append('mac', receivedMac);
+
+            const response = await fetch('/verify_mac', { method: 'POST', body: formData });
+            const data = await response.json();
+
+            // Populate Basic Stats
+            document.getElementById('stat_mac_len').innerText = data.mac_length + " bits";
+            document.getElementById('stat_key_len').innerText = data.key_length + " bits";
+            document.getElementById('stat_exec_time').innerText = data.execution_time_ms + " ms";
+
+            // Build Character Highlight Verification
+            let htmlBuf = "";
+            let maxLength = Math.max(receivedMac.length, data.recomputed_mac.length);
+            for(let i=0; i < maxLength; i++) {
+                let rChar = receivedMac[i] || '';
+                let nChar = data.recomputed_mac[i] || '';
+                
+                if (data.is_valid) {
+                    htmlBuf += `<span class="char-match">${nChar}</span>`;
+                } else {
+                    if (rChar === nChar) {
+                        htmlBuf += `<span class="char-match">${nChar}</span>`;
+                    } else {
+                        htmlBuf += `<span class="char-diff">${nChar || '_'}</span>`;
+                    }
+                }
+            }
+
+            // Populate MAC displays
+            document.getElementById('orig_mac_display').innerText = receivedMac;
+            document.getElementById('recomputed_mac_display').innerHTML = htmlBuf;
+
+            // Template Logic Control: Verified vs Tampered
+            const banner = document.getElementById('resultBanner');
+            const statusInd = document.getElementById('statusIndicator');
+
+            banner.classList.remove('success', 'failed');
+            
+            if (data.is_valid) {
+                banner.classList.add('success');
+                banner.innerText = "🟢 INTEGRITY VERIFIED — MESSAGE AUTHENTIC";
+                statusInd.innerHTML = "<span class='text-success'>✔ MATCH</span>";
+            } else {
+                banner.classList.add('failed');
+                banner.innerText = "🔴 INTEGRITY FAILED — MESSAGE TAMPERED";
+                statusInd.innerHTML = "<span class='text-danger'>✘ NOT MATCH</span>";
+            }
+
+            document.getElementById('verificationSection').classList.remove('hidden');
+
+        } catch (e) {
+            alert("Error verifying MAC.");
+            console.error(e);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<svg class="extracted-inline-113" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg> Recompute & Verify MAC`;
+        }
+    }
+</script>
+
+</body>
+</html>

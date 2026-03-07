@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALA - 2 SHA Analyzer</title>
+    <!-- Modern Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+</head>
+<body>
+
+<div class="premium-container">
+    
+    <!-- Header -->
+    <div class="university-header">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo">
+        <div class="header-text">
+            <h1>Gyanmanjari Institute of Technology</h1>
+            <p>Department of Information Technology</p>
+        </div>
+    </div>
+
+    <!-- Educational Section -->
+    <div class="section-card extracted-inline-10">
+        <h3 class="extracted-inline-11">📚 Educational Concepts</h3>
+        
+        <p class="extracted-inline-12"><strong>What is SHA?</strong></p>
+        <p class="extracted-inline-13">Secure Hash Algorithm (SHA) is a family of cryptographic hash functions that maps data of any size to a fixed-size bit string. It acts like a digital fingerprint for files or messages.</p>
+
+        <p class="extracted-inline-12"><strong>What is the Avalanche Effect?</strong></p>
+        <p class="extracted-inline-13"><span class="extracted-inline-14">"Even a small change in input produces a completely different hash output."</span> This property ensures that any tampering drastically changes the output, making manipulation mathematically impossible to hide.</p>
+
+        <p class="extracted-inline-12"><strong>Why is hashing important in digital signatures?</strong></p>
+        <p class="extracted-inline-13">Digital signatures are applied to hashes, not full files. Hashing guarantees speed and consistency, while the avalanche effect ensures total data integrity.</p>
+    </div>
+
+    <!-- INPUT SECTION -->
+    <div class="section-card">
+        <div class="section-header">
+            <div class="step-number extracted-inline-15">1</div>
+            <div class="section-title">
+                <h3>Payload Configuration (Input)</h3>
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <label for="origMsg">Original Message</label>
+            <input type="text" id="origMsg" class="input-box" placeholder="e.g. Hello Dipak" value="Hello Dipak">
+        </div>
+
+        <div class="input-group extracted-inline-16">
+            <label for="modMsg">Modified Message (Simulate Tampering)</label>
+            <input type="text" id="modMsg" class="input-box" placeholder="e.g. Hello dipak" value="Hello dipak">
+        </div>
+        
+        <button type="button" class="btn extracted-inline-17" id="btnAnalyze" onclick="analyzeHashes()">
+            <svg class="extracted-inline-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+            Generate Hash and Analyze
+        </button>
+    </div>
+
+    <!-- HASH RESULTS SECTION -->
+    <div class="section-card hidden" id="resultsSection">
+        <div class="section-header">
+            <div class="step-number extracted-inline-18">2</div>
+            <div class="section-title">
+                <h3>Computed Hash Digests</h3>
+            </div>
+        </div>
+
+        <div class="extracted-inline-19">
+            <!-- Column 1 Original -->
+            <div class="extracted-inline-20">
+                <h4 class="extracted-inline-21">Original Message Hashes</h4>
+                <p class="extracted-inline-22"><strong>Payload:</strong> <span class="extracted-inline-23" id="lbl_orig_msg"></span></p>
+                
+                <div class="extracted-inline-24">
+                    <strong class="extracted-inline-25">SHA-1</strong>
+                    <div class="hash-string extracted-inline-26" id="hash_orig_sha1"></div>
+                </div>
+                <div class="extracted-inline-24">
+                    <strong class="extracted-inline-25">SHA-256</strong>
+                    <div class="hash-string extracted-inline-27" id="hash_orig_sha256"></div>
+                </div>
+                <div>
+                    <strong class="extracted-inline-25">SHA-512</strong>
+                    <div class="hash-string extracted-inline-28" id="hash_orig_sha512"></div>
+                </div>
+            </div>
+
+            <!-- Column 2 Tampered -->
+            <div class="extracted-inline-20">
+                <h4 class="extracted-inline-29">Modified Message Hashes</h4>
+                <p class="extracted-inline-22"><strong>Payload:</strong> <span class="extracted-inline-23" id="lbl_mod_msg"></span></p>
+
+                <div class="extracted-inline-24">
+                    <strong class="extracted-inline-25">SHA-1</strong>
+                    <div class="hash-string extracted-inline-26" id="hash_mod_sha1"></div>
+                </div>
+                <div class="extracted-inline-24">
+                    <strong class="extracted-inline-25">SHA-256</strong>
+                    <div class="hash-string extracted-inline-27" id="hash_mod_sha256"></div>
+                </div>
+                <div>
+                    <strong class="extracted-inline-25">SHA-512</strong>
+                    <div class="hash-string extracted-inline-28" id="hash_mod_sha512"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMPARISON SECTION -->
+    <div class="section-card hidden" id="comparisonSection">
+        <div class="section-header">
+            <div class="step-number extracted-inline-30">3</div>
+            <div class="section-title">
+                <h3>Visual Comparison Table</h3>
+            </div>
+        </div>
+
+        <table class="extracted-inline-31">
+            <thead>
+                <tr class="extracted-inline-32">
+                    <th class="extracted-inline-33">Algorithm</th>
+                    <th class="extracted-inline-33">Original Hash (Snippet)</th>
+                    <th class="extracted-inline-33">Modified Hash (Snippet)</th>
+                    <th class="extracted-inline-33">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="extracted-inline-34">
+                    <td class="extracted-inline-35">SHA-1</td>
+                    <td class="extracted-inline-36" id="tbl_orig_sha1"></td>
+                    <td class="extracted-inline-36" id="tbl_mod_sha1"></td>
+                    <td class="extracted-inline-37" id="tbl_status_sha1"></td>
+                </tr>
+                <tr class="extracted-inline-34">
+                    <td class="extracted-inline-38">SHA-256</td>
+                    <td class="extracted-inline-36" id="tbl_orig_sha256"></td>
+                    <td class="extracted-inline-36" id="tbl_mod_sha256"></td>
+                    <td class="extracted-inline-37" id="tbl_status_sha256"></td>
+                </tr>
+                <tr>
+                    <td class="extracted-inline-39">SHA-512</td>
+                    <td class="extracted-inline-36" id="tbl_orig_sha512"></td>
+                    <td class="extracted-inline-36" id="tbl_mod_sha512"></td>
+                    <td class="extracted-inline-37" id="tbl_status_sha512"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- AVALANCHE EFFECT VISUALIZATION SECTION -->
+    <div class="section-card hidden" id="avalancheSection">
+        <div class="section-header">
+            <div class="step-number extracted-inline-40">4</div>
+            <div class="section-title">
+                <h3>Avalanche Effect Analysis (SHA-256 Focus)</h3>
+            </div>
+        </div>
+
+        <div class="extracted-inline-41">
+            <p class="extracted-inline-42">Character-level Difference Detection</p>
+            
+            <div class="extracted-inline-43">
+                <div class="extracted-inline-44">
+                    <span class="extracted-inline-45">Original:</span>
+                    <div id="visual_orig" class="hash-string extracted-inline-46"></div>
+                </div>
+                <div class="extracted-inline-44">
+                    <span class="extracted-inline-45">Modified:</span>
+                    <div id="visual_mod" class="hash-string extracted-inline-46"></div>
+                </div>
+            </div>
+
+            <div class="extracted-inline-47">
+                <div class="extracted-inline-48">
+                    <div class="extracted-inline-49" id="stat_diff_count">0</div>
+                    <div class="extracted-inline-50">Differing Characters</div>
+                </div>
+                <div class="extracted-inline-48">
+                    <div class="extracted-inline-51" id="stat_total_count">64</div>
+                    <div class="extracted-inline-50">Hash Length (Hex)</div>
+                </div>
+                <div class="extracted-inline-48">
+                    <div class="extracted-inline-52" id="stat_pct_diff">0%</div>
+                    <div class="extracted-inline-50">Avalanche Difference</div>
+                </div>
+            </div>
+
+            <div id="avalancheDecision" class="status-box extracted-inline-53"></div>
+
+        </div>
+    </div>
+
+    <!-- Footer / Navigation -->
+    <div class="extracted-inline-8">
+        <a href="/" class="nav-back">
+            <svg class="extracted-inline-9" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Return to Dashboard
+        </a>
+    </div>
+
+</div>
+
+<script>
+    async function analyzeHashes() {
+        const origMsg = document.getElementById('origMsg').value;
+        const modMsg = document.getElementById('modMsg').value;
+
+        if (!origMsg || !modMsg) {
+            alert("Please enter both the original and modified messages.");
+            return;
+        }
+
+        const btn = document.getElementById('btnAnalyze');
+        btn.disabled = true;
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = `Analyzing...`;
+
+        try {
+            const formData = new FormData();
+            formData.append('orig_message', origMsg);
+            formData.append('mod_message', modMsg);
+
+            const response = await fetch('/analyze', { method: 'POST', body: formData });
+            const data = await response.json();
+
+            // Populate Section 2: Hash Results
+            document.getElementById('lbl_orig_msg').innerText = data.original.message;
+            document.getElementById('lbl_mod_msg').innerText = data.modified.message;
+
+            document.getElementById('hash_orig_sha1').innerText = data.original.sha1;
+            document.getElementById('hash_orig_sha256').innerText = data.original.sha256;
+            document.getElementById('hash_orig_sha512').innerText = data.original.sha512;
+
+            document.getElementById('hash_mod_sha1').innerText = data.modified.sha1;
+            document.getElementById('hash_mod_sha256').innerText = data.modified.sha256;
+            document.getElementById('hash_mod_sha512').innerText = data.modified.sha512;
+
+            document.getElementById('resultsSection').classList.remove('hidden');
+
+            // Populate Section 3: Comparison Table
+            formatTableStatus('sha1', data.original.sha1, data.modified.sha1);
+            formatTableStatus('sha256', data.original.sha256, data.modified.sha256);
+            formatTableStatus('sha512', data.original.sha512, data.modified.sha512);
+
+            document.getElementById('comparisonSection').classList.remove('hidden');
+
+            // Populate Section 4: Avalanche Effect Visuals
+            renderAvalancheCharacters(data.original.sha256, data.modified.sha256);
+            
+            document.getElementById('stat_diff_count').innerText = data.avalanche.diff_chars;
+            document.getElementById('stat_total_count').innerText = data.avalanche.total_chars;
+            document.getElementById('stat_pct_diff').innerText = data.avalanche.percentage + "%";
+
+            const resultBox = document.getElementById('avalancheDecision');
+            resultBox.style.display = 'block';
+            resultBox.classList.remove('status-valid', 'status-invalid');
+
+            if (data.avalanche.detected === "YES") {
+                resultBox.classList.add('status-valid');
+                resultBox.innerHTML = `✅ Avalanche Effect Detected: YES<br><span class="extracted-inline-54">Data integrity mechanism securely tripped over minor modification.</span>`;
+            } else {
+                resultBox.classList.add('status-invalid');
+                resultBox.innerHTML = `❌ Avalanche Effect Detected: NO<br><span class="extracted-inline-54">Messages are perfectly identical. No tampering found.</span>`;
+            }
+
+            document.getElementById('avalancheSection').classList.remove('hidden');
+
+        } catch (e) {
+            alert("Error generating hashes.");
+            console.error(e);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    }
+
+    function formatTableStatus(idSuffix, origHash, modHash) {
+        // Just show first 12 chars to save space
+        const shortOrig = origHash.substring(0, 12) + "...";
+        const shortMod = modHash.substring(0, 12) + "...";
+
+        document.getElementById(`tbl_orig_${idSuffix}`).innerText = shortOrig;
+        document.getElementById(`tbl_mod_${idSuffix}`).innerText = shortMod;
+
+        const statusCell = document.getElementById(`tbl_status_${idSuffix}`);
+        if (origHash === modHash) {
+            statusCell.innerHTML = `<span class="extracted-inline-55">Match</span>`;
+        } else {
+            statusCell.innerHTML = `<span class="extracted-inline-56">Not Match</span>`;
+        }
+    }
+
+    function renderAvalancheCharacters(origHash, modHash) {
+        let origHtml = "";
+        let modHtml = "";
+
+        for (let i = 0; i < origHash.length; i++) {
+            if (origHash[i] === modHash[i]) {
+                origHtml += `<span class="char-match">${origHash[i]}</span>`;
+                modHtml += `<span class="char-match">${modHash[i]}</span>`;
+            } else {
+                origHtml += `<span class="char-diff">${origHash[i]}</span>`;
+                modHtml += `<span class="char-diff">${modHash[i]}</span>`;
+            }
+        }
+
+        document.getElementById('visual_orig').innerHTML = origHtml;
+        document.getElementById('visual_mod').innerHTML = modHtml;
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALA - 1 Digital Signature</title>
+    <!-- Modern Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="premium-container">
+    
+    <!-- Header -->
+    <div class="university-header">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo">
+        <div class="header-text">
+            <h1>Gyanmanjari Institute of Technology</h1>
+            <p>Department of Information Technology</p>
+        </div>
+    </div>
+
+    <h2 class="page-title">Digital Signature Verifier</h2>
+
+    <!-- KEY GENERATION SECTION -->
+    <div class="section-card" id="genSection">
+        <div class="section-header">
+            <div class="step-number">1</div>
+            <div class="section-title">
+                <h3>RSA Key Generation</h3>
+            </div>
+        </div>
+        <p class="extracted-inline-1">Generate the cryptographic mathematical foundation needed for secure signatures.</p>
+        
+        <button type="button" class="btn" id="btnGenKeys" onclick="generateKeys()">
+            <svg class="extracted-inline-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+            Generate Keys
+        </button>
+        
+        <div id="keyData" class="data-grid hidden">
+            <div class="data-row"><span class="data-label">Prime (p)</span> <span class="data-value" id="val_p"></span></div>
+            <div class="data-row"><span class="data-label">Prime (q)</span> <span class="data-value" id="val_q"></span></div>
+            <div class="data-row"><span class="data-label">Modulus (n)</span> <span class="data-value" id="val_n"></span></div>
+            <div class="data-row"><span class="data-label">Public Key (e,n)</span> <span class="data-value extracted-inline-3" id="val_pub"></span></div>
+            <div class="data-row"><span class="data-label">Private Key (d,n)</span> <span class="data-value extracted-inline-4" id="val_priv"></span></div>
+        </div>
+    </div>
+
+    <!-- SIGNING PROCESS SECTION -->
+    <div class="section-card hidden" id="signSection">
+        <div class="section-header">
+            <div class="step-number">2</div>
+            <div class="section-title">
+                <h3>Document Signing</h3>
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <label for="origMessage">Original Payload / Message</label>
+            <input type="text" id="origMessage" class="input-box" placeholder="e.g. Authorized transaction of $500">
+        </div>
+        
+        <button type="button" class="btn" id="btnSign" onclick="signMessage()">
+            <svg class="extracted-inline-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+            Sign Message
+        </button>
+        
+        <div id="signData" class="data-grid hidden">
+            <div class="data-row"><span class="data-label">SHA-256 Digest</span> <span class="data-value extracted-inline-5" id="val_orig_hash"></span></div>
+            <div class="data-row"><span class="data-label">RSA Digital Signature</span> <span class="data-value extracted-inline-6" id="val_sig"></span></div>
+        </div>
+    </div>
+
+    <!-- VERIFICATION PROCESS SECTION -->
+    <div class="section-card hidden" id="verifySection">
+        <div class="section-header">
+            <div class="step-number">3</div>
+            <div class="section-title">
+                <h3>Integrity Verification</h3>
+            </div>
+        </div>
+        <p class="extracted-inline-1">Modify the payload below to simulate a network tampering attack, then verify the signature against the hash.</p>
+        
+        <div class="input-group">
+            <label for="verifyMessage">Received Payload (Edit to tamper)</label>
+            <input type="text" id="verifyMessage" class="input-box" placeholder="Message received over network">
+        </div>
+        
+        <button type="button" class="btn" id="btnVerify" onclick="verifySignature()">
+            <svg class="extracted-inline-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            Verify Signature
+        </button>
+        
+        <div id="verifyData" class="data-grid hidden">
+            <div class="data-row"><span class="data-label">Computed Hash</span> <span class="data-value extracted-inline-5" id="val_new_hash"></span></div>
+            <div class="data-row extracted-inline-7" id="hashCompareRow"></div>
+        </div>
+        
+        <div id="verificationResult" class="status-box"></div>
+    </div>
+
+    <!-- Footer / Navigation -->
+    <div class="extracted-inline-8">
+        <a href="/" class="nav-back">
+            <svg class="extracted-inline-9" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Return to Dashboard
+        </a>
+    </div>
+
+</div>
+
+<script>
+    // Global state
+    let rsaKeys = null;
+    let currentSignature = null;
+    let currentOrigHash = null;
+
+    async function generateKeys() {
+        const btn = document.getElementById('btnGenKeys');
+        btn.disabled = true;
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = `<svg class="animate-spin extracted-inline-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Generating...`;
+
+        try {
+            const formData = new FormData();
+            const response = await fetch('/generate_keys', { method: 'POST', body: formData });
+            const data = await response.json();
+            rsaKeys = data;
+
+            document.getElementById('val_p').innerText = data.p;
+            document.getElementById('val_q').innerText = data.q;
+            document.getElementById('val_n').innerText = data.n;
+            document.getElementById('val_pub').innerText = `(${data.e}, ${data.n})`;
+            document.getElementById('val_priv').innerText = `(${data.d}, ${data.n})`;
+            
+            document.getElementById('keyData').classList.remove('hidden');
+            document.getElementById('signSection').classList.remove('hidden');
+            
+            // Clear downstream data
+            document.getElementById('signData').classList.add('hidden');
+            document.getElementById('verifySection').classList.add('hidden');
+            document.getElementById('verifyData').classList.add('hidden');
+            document.getElementById('verificationResult').style.display = 'none';
+            document.getElementById('origMessage').value = "";
+            
+        } catch (e) {
+            alert("Error generating keys.");
+            console.error(e);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    }
+
+    async function signMessage() {
+        const msg = document.getElementById('origMessage').value;
+        if (!msg) {
+            alert("Please enter a payload to sign!");
+            return;
+        }
+
+        const btn = document.getElementById('btnSign');
+        btn.disabled = true;
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = `Signing...`;
+
+        try {
+            const formData = new FormData();
+            formData.append('message', msg);
+            formData.append('d', rsaKeys.d);
+            formData.append('n', rsaKeys.n);
+
+            const response = await fetch('/sign', { method: 'POST', body: formData });
+            const data = await response.json();
+            
+            currentSignature = data.signature;
+            currentOrigHash = data.hash;
+
+            document.getElementById('val_orig_hash').innerText = data.hash;
+            document.getElementById('val_sig').innerText = data.signature;
+            
+            document.getElementById('signData').classList.remove('hidden');
+            
+            // Setup verify section
+            document.getElementById('verifySection').classList.remove('hidden');
+            document.getElementById('verifyMessage').value = msg; 
+            document.getElementById('verifyData').classList.add('hidden');
+            document.getElementById('verificationResult').style.display = 'none';
+            
+        } catch (e) {
+            alert("Error signing message.");
+            console.error(e);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    }
+
+    async function verifySignature() {
+        const msg = document.getElementById('verifyMessage').value;
+        if (!msg) {
+            alert("Please enter the message to verify!");
+            return;
+        }
+
+        const btn = document.getElementById('btnVerify');
+        btn.disabled = true;
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = `Verifying...`;
+
+        try {
+            const formData = new FormData();
+            formData.append('message', msg);
+            formData.append('signature', currentSignature);
+            formData.append('e', rsaKeys.e);
+            formData.append('n', rsaKeys.n);
+
+            const response = await fetch('/verify', { method: 'POST', body: formData });
+            const data = await response.json();
+            
+            document.getElementById('val_new_hash').innerText = data.hash;
+            
+            const compareRow = document.getElementById('hashCompareRow');
+            const resultBox = document.getElementById('verificationResult');
+            
+            if (data.hash === currentOrigHash) {
+                compareRow.innerText = "✓ Computed Hash perfectly matches Original Hash";
+                compareRow.style.color = "#34d399";
+            } else {
+                compareRow.innerText = "✗ Computed Hash DOES NOT match Original Hash";
+                compareRow.style.color = "#f87171";
+            }
+            
+            resultBox.style.display = 'block';
+            resultBox.classList.remove('status-valid', 'status-invalid');
+            
+            if (data.is_valid) {
+                resultBox.classList.add('status-valid');
+                resultBox.innerHTML = "✅ Signature VALID<br><span style='font-size:14px;font-weight:400;'>Message is Authentic and Integrity is verified</span>";
+            } else {
+                resultBox.classList.add('status-invalid');
+                resultBox.innerHTML = "⚠️ Signature INVALID<br><span style='font-size:14px;font-weight:400;'>Message has been Tampered with!</span>";
+            }
+            
+            document.getElementById('verifyData').classList.remove('hidden');
+            
+        } catch (e) {
+            alert("Error verifying message.");
+            console.error(e);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    }
+</script>
+
+</body>
+</html>

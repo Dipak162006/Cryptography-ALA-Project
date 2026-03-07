@@ -1,0 +1,15 @@
+[build]
+  functions = "netlify/functions"
+  publish = "static"
+
+[functions]
+  included_files = ["app.py", "templates/**", "static/**"]
+
+[build.environment]
+  PYTHON_VERSION = "3.11"
+
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/app"
+  status = 200
+  force = true
